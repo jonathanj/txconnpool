@@ -134,12 +134,18 @@ class Pool(object):
         self._pendingConnects = 0
         self._commands = []
 
-    def _isIdle(self):
+
+    def _hasNoClients(self):
         return (
             len(self._busyClients) == 0 and
-            len(self._commands) == 0 and
-            self._pendingConnects == 0
-        )
+            len(self._commands) == 0)
+
+
+    def _isIdle(self):
+        return (
+            self._hasNoClients() and
+            self._pendingConnects == 0)
+
 
     def _shutdownCallback(self):
         self.shutdown_requested = True
@@ -149,7 +155,7 @@ class Pool(object):
         for client in self._freeClients:
             client.transport.loseConnection()
         
-        if self._isIdle():
+        if self._hasNoClients():
             return None
         
         self.shutdown_deferred = Deferred()
